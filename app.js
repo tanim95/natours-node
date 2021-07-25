@@ -1,143 +1,120 @@
 const express = require('express');
 const fs = require('fs');
+const userRoute = require('./userRoute');
+const Tour = require('./models/tourModel');
+// const Run = require('./MongodbDriver');
 
 const app = express();
-const port = 3000;
+if (process.env.NODE_ENV === 'development') {
+  console.log('You are currently in development mode');
+}
 
-//// Middle ware
+// Middleware for sending any file from ceritain folder direct to the browser
+app.use(express.static(`${__dirname}/public`));
+
+//// Middle ware,without it we cant use 'post' request body data i.e 'req.body'.
 app.use(express.json());
 
-// Our owm middleware,this is also a global middleware as its declared before all the middleware like GET,POST etc.We can use this middleware function in any get request below
+// Our own middleware function,this is also a global middleware as its declared before all the middleware like GET,POST etc.We can use this middleware function in any get request below
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
   next();
 });
 
-const tourData = JSON.parse(
-  fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`)
-);
+////// reading data from file
 
-app.get('/api/v1/tours/', (req, res) => {
+// const tourData = JSON.parse(
+// fs.readFileSync(`${__dirname}/dev-data/data/tours-sample.json`,'utf-8)
+// );
+
+app.get('/api/v1/tours/', async (req, res) => {
+  const tours = await Tour.find();
   res.status(200).json({
     status: 'success',
     requestedAt: req.requestTime,
-    resuts: tourData.length,
     data: {
-      tourData,
+      tours,
     },
   });
 });
-app.get('/api/v1/tours/:id', (req, res) => {
-  const tour = tourData.find((el) => el.id === +req.params.id);
-  if (!tour) {
-    return res.status(404).json({
-      status: 'fail',
-      message: 'InvalidId',
+
+app.get('/api/v1/tours/:id', async (req, res) => {
+  try {
+    const tour = await Tour.findById(req.params.id);
+    res.status(200).json({
+      status: 'success',
+      data: {
+        tour,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'Failed',
+      message: err,
     });
   }
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour,
-    },
-  });
 });
+const createTour = async (req, res) => {
+  try {
+    const newTour = await Tour.create(req.body);
+    res.status(201).json({
+      status: 'success',
+      data: {
+        newTour,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'Failed',
+      message: err,
+    });
+  }
+};
 
-app.post('/api/v1/tours', (req, res) => {
-  const newId = tourData[tourData.length - 1].id + 1;
-  const newTour = Object.assign({ id: newId }, req.body);
-  tourData.push(newTour);
-  fs.writeFile(
-    `${__dirname}/dev-data/data/tours-simple.json`,
-    JSON.stringify(tourData),
-    (err) => {
-      res.status(201).json({
-        status: 'success',
-        data: {
-          tours: newTour,
-        },
-      });
-    }
-  );
-});
-
-// app.patch('/api/v1/tours/:id', (req, res) => {
-// res.status(200).json({
-// status: 'success',
-// data: {
-// tour: 'tour updated...',
-// },
-// });
-// });
-//
-// app.delete('/api/v1/tours/:id', (req, res) => {
-// res.status(200).json({
-// status: 'success',
-// data: {
-// tour: 'item deleted...',
-// },
-// });
-// });
+app.post('/api/v1/tours', createTour);
 
 // Or we can do this way
 
-const patchTour = (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour: 'tour updated...',
-    },
-  });
+const updateTour = async (req, res) => {
+  try {
+    const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    res.status(200).json({
+      status: 'success',
+      data: {
+        tour,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'Failed',
+      message: err,
+    });
+  }
 };
-const deleteTour = (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour: 'item deleted...',
-    },
-  });
+const deleteTour = async (req, res) => {
+  try {
+    const tour = await Tour.findByIdAndDelete(req.params.id);
+    res.status(204).json({
+      status: 'success',
+      data: {
+        tour,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'Failed',
+      message: err,
+    });
+  }
 };
 
-app.route('/api/v1/tours/:id').patch(patchTour).delete(deleteTour);
+app.route('/api/v1/tours/:id').patch(updateTour).delete(deleteTour);
 
 //for Users
-const getAllUsers = (req,res)=>{
-  res.status(500).json({
-    status: 'error',
-    message : 'This route is not yet defined'
-  })
-}
-const getAllUser = (req,res)=>{
-  res.status(500).json({
-    status: 'error',
-    message : 'This route is not yet defined'
-  })
-}
+//middleware for this route
+app.use('/api/v1/users', userRoute);
 
-const createUser = (req,res)=>{
-  res.status(500).json({
-    status: 'error',
-    message : 'This route is not yet defined'
-  })
-}
-const updateUser = (req,res)=>{
-  res.status(500).json({
-    status: 'error',
-    message : 'This route is not yet defined'
-  })
-}
-const deleteUser = (req,res)=>{
- res.status(500).json({
-   status: 'error',
-   message : 'This route is not yet defined'
- })
-
-
-
-app.route('/api/v1/users').get(getAllUsers).post(createUser);
-app.route('/api/v1/users/:id').get(getAllUser).patch(updateUser).delete(deleteUser);
-
-
-app.listen(port, () => {
-  console.log('Listining on port :' + port);
-});
+module.exports = app;

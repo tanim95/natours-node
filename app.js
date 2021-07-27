@@ -27,16 +27,67 @@ app.use((req, res, next) => {
 // fs.readFileSync(`${__dirname}/dev-data/data/tours-sample.json`,'utf-8)
 // );
 
-app.get('/api/v1/tours/', async (req, res) => {
-  const tours = await Tour.find();
-  res.status(200).json({
-    status: 'success',
-    requestedAt: req.requestTime,
-    data: {
-      tours,
-    },
-  });
-});
+const AliasTopTour = (req, res, next) => {
+  req.query.limit = '5';
+  req.query.sort = 'price';
+  req.query.fields = 'name,price,summery,difficulty,ratingsAvarage';
+  next();
+};
+
+const getAllTours = async (req, res) => {
+  try {
+    // BUILD THE QUERY
+    const queryObj = { ...req.query };
+    // const excludeFields = ['page', 'sort', 'limit', 'fields'];
+    // excludeFields.forEach((el) => delete queryObj[el]);
+
+    //Advanced Filtering
+    let queries = JSON.stringify(queryObj);
+    queries = queries.replace(/\b(lte|lt|gte|gt)\b/g, (match) => `$${match}`);
+    let queryData = Tour.find(JSON.parse(queries));
+
+    if (req.query.sort) {
+      const sort = req.query.sort.split(',').join(' ');
+      queryData = queryData.sort(sort);
+    }
+    if (req.query.fields) {
+      const fields = req.query.fields.split(',').join(' ');
+      queryData = queryData.select(fields);
+    }
+    //Pagination
+    const page = +req.query.page;
+    const limit = +req.query.limit;
+    const skipVal = (page - 1) * limit;
+    queryData = queryData.skip(skipVal).limit(limit);
+
+    if (req.query.page) {
+      const count = await Tour.countDocuments();
+      if (skip >= count) throw new Error('page do not exist');
+    }
+
+    // execute the query,await will immidiatly execute Query object that comes with a result in that case we cant preform any sorting or other oparation thats why we saved it in a variable for some processing the 'await' it.
+    const tours = await queryData;
+
+    res.status(200).json({
+      status: 'success',
+      requestedAt: req.requestTime,
+      result: tours.length,
+      data: {
+        tours,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'Failed',
+      message: err,
+    });
+  }
+};
+
+app.get('/api/v1/tours/', getAllTours);
+
+// Alias Route(FOR SPECIFIC ROUTE THAT USER USES MOST SO WE PREFIX SOME QURIES ALREADY)
+app.get('/api/v1/tours/top-5-tours', AliasTopTour, getAllTours);
 
 app.get('/api/v1/tours/:id', async (req, res) => {
   try {

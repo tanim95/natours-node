@@ -1,12 +1,13 @@
-const app = require('./app');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 dotenv.config({ path: './config.env' });
+const app = require('./app');
 
 //Connecting MongoDB using Mongoose
 mongoose
   .connect(process.env.DATABASE, {
     useUnifiedTopology: true,
+    useNewUrlParser: true,
     useCreateIndex: true,
     useFindAndModify: false,
   })

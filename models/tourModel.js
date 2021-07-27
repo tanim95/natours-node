@@ -12,9 +12,7 @@ const tourSchema = new mongoose.Schema({
   maxGroupSize: {
     type: Number,
   },
-  difficulties: {
-    type: String,
-  },
+  difficulty: String,
   ratingsAvarage: {
     type: Number,
     default: 4.5,
@@ -25,19 +23,20 @@ const tourSchema = new mongoose.Schema({
   },
   price: Number,
   priceDiscount: Number,
-  summery: String,
+  summary: String,
   description: String,
   imageCover: String,
   images: [String],
   createdAt: {
     type: Date,
     default: Date.now(),
+    // select: false,
   },
-  startDate: [Date],
+  startDates: [Date],
 });
 
 //Creating Model out of Schema
-const Tour = mongoose.model('Tour', tourSchema);
+const Tour = mongoose.model('tours', tourSchema);
 
 // const testTour = new Tour({
 // name: 'The forest hiker',

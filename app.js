@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const userRoute = require('./userRoute');
 const Tour = require('./models/tourModel');
+const APIfeature = require('./controller/tourController');
 // const Run = require('./MongodbDriver');
 
 const app = express();
@@ -34,39 +35,83 @@ const AliasTopTour = (req, res, next) => {
   next();
 };
 
+////////// Aggregation pipline
+
+const aggregationPipeline = async (req, res) => {
+  try {
+    const stats = await Tour.aggregate([
+      {
+        $match: { ratingsAvarage: { $gte: 4.5 } },
+      },
+      {
+        $group: {
+          // _id: null,
+          // _id: '$difficulty',
+          _id: { $toUpper: '$difficulty' },
+          numTours: { $sum: 1 },
+          avgRating: { $avg: '$ratingsAvarage' },
+          avgPrice: { $avg: '$price' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' },
+        },
+      },
+      {
+        $sort: { avgPrice: 1 },
+      },
+    ]);
+    res.status(200).json({
+      status: 'success',
+      data: {
+        stats,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'Failed',
+      message: err,
+    });
+  }
+};
+app.get('/api/v1/tours/tour-stats', aggregationPipeline);
+
 const getAllTours = async (req, res) => {
   try {
     // BUILD THE QUERY
-    const queryObj = { ...req.query };
+    // const queryObj = { ...req.query };
     // const excludeFields = ['page', 'sort', 'limit', 'fields'];
     // excludeFields.forEach((el) => delete queryObj[el]);
 
-    //Advanced Filtering
-    let queries = JSON.stringify(queryObj);
-    queries = queries.replace(/\b(lte|lt|gte|gt)\b/g, (match) => `$${match}`);
-    let queryData = Tour.find(JSON.parse(queries));
+    // //Advanced Filtering
+    // let queries = JSON.stringify(queryObj);
+    // queries = queries.replace(/\b(lte|lt|gte|gt)\b/g, (match) => `$${match}`);
+    // let queryData = Tour.find(JSON.parse(queries));
 
-    if (req.query.sort) {
-      const sort = req.query.sort.split(',').join(' ');
-      queryData = queryData.sort(sort);
-    }
-    if (req.query.fields) {
-      const fields = req.query.fields.split(',').join(' ');
-      queryData = queryData.select(fields);
-    }
+    // if (req.query.sort) {
+    //   const sort = req.query.sort.split(',').join(' ');
+    //   queryData = queryData.sort(sort);
+    // }
+    // if (req.query.fields) {
+    //   const fields = req.query.fields.split(',').join(' ');
+    //   queryData = queryData.select(fields);
+    // }
     //Pagination
-    const page = +req.query.page;
-    const limit = +req.query.limit;
-    const skipVal = (page - 1) * limit;
-    queryData = queryData.skip(skipVal).limit(limit);
+    // const page = +req.query.page;
+    // const limit = +req.query.limit;
+    // const skipVal = (page - 1) * limit;
+    // queryData = queryData.skip(skipVal).limit(limit);
 
-    if (req.query.page) {
-      const count = await Tour.countDocuments();
-      if (skip >= count) throw new Error('page do not exist');
-    }
+    // if (req.query.page) {
+    //   const count = await Tour.countDocuments();
+    //   if (skip >= count) throw new Error('page do not exist');
+    // }
 
     // execute the query,await will immidiatly execute Query object that comes with a result in that case we cant preform any sorting or other oparation thats why we saved it in a variable for some processing the 'await' it.
-    const tours = await queryData;
+    const feature = new APIfeature(Tour.find(), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+    const tours = await feature.query;
 
     res.status(200).json({
       status: 'success',

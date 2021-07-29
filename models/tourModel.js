@@ -7,6 +7,7 @@ const tourSchema = new mongoose.Schema(
       type: String,
       unique: true,
       required: [true, 'A tour must have a name'],
+      maxlength: [40, 'Tour name must be less than 40 character'],
     },
     duration: {
       type: Number,
@@ -14,10 +15,18 @@ const tourSchema = new mongoose.Schema(
     maxGroupSize: {
       type: Number,
     },
-    difficulty: String,
+    difficulty: {
+      type: String,
+      enum: {
+        values: ['easy', 'medium', 'difficult'],
+        message: 'Difficulyt is either easy,medium or difficult',
+      },
+    },
     ratingsAvarage: {
       type: Number,
       default: 4.5,
+      min: 1,
+      max: 5,
     },
     ratingsQunatity: {
       type: Number,
@@ -40,13 +49,19 @@ const tourSchema = new mongoose.Schema(
   {
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
+  },
+  {
+    secretTour: {
+      type: Boolean,
+      default: false,
+    },
   }
 );
 /// Virtual database
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
-// mongoose middleware
+// mongoose middleware,doc middleware
 // document pre middleware.that works before 'save' or 'create' event.we can use multiple pre middleware
 tourSchema.pre('save', function (next) {
   this.slug = slugify(this.name, { lower: true });
@@ -57,6 +72,20 @@ tourSchema.post('save', function (doc, next) {
   // console.log(doc);
   next();
 });
+
+// query middleware
+tourSchema.pre('find', function (next) {
+  this.find({ duration: { $gt: 7 } });
+  this.start = Date.now();
+  next();
+});
+tourSchema.post(/^find/, function (doc, next) {
+  console.log(`Query took ${Date.now() - this.start} millisec`);
+  next();
+});
+//aggregation middleware
+tourSchema.pre('aggregate', function (next) {});
+
 //Creating Model out of Schema
 const Tour = mongoose.model('tours', tourSchema);
 

@@ -45,4 +45,4 @@ if (process.argv[2] === '--import') importData();
 if (process.argv[2] === '--delete') deleteData();
 
 // console.log(process.argv);
-// node dev-data/data/import-dev-data.js
+// node dev-data/data/import-dev-data.js --import

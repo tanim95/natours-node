@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     minlength: 8,
+    select: false, // so the password will never show to the user.
   },
   passwordconfirm: {
     type: String,
@@ -42,6 +43,10 @@ userSchema.pre('save', async function (next) {
   this.passwordconfirm = undefined;
   next();
 });
+// IT IS AN 'INSTANCE' WHICH IS AVAILABLE FOR ALL THE DOCUMNET IN A CERTAIN COLLECTION.
+userSchema.methods.comparePass = async function (candidatePass, userPass) {
+  return await bcrypt.compare(candidatePass, userPass);
+};
 
 const User = mongoose.model('user', userSchema);
 module.exports = User;

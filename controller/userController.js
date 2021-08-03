@@ -1,14 +1,36 @@
-exports.getAllUsers = (req, res) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'This route is not yet defined',
-  });
+const User = require('../models/userModel');
+
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find();
+    res.status(200).json({
+      status: 'success',
+      data: {
+        users,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'fail',
+      message: error.message,
+    });
+  }
 };
-exports.getAllUser = (req, res) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'This route is not yet defined',
-  });
+exports.getUser = async (req, res, next) => {
+  try {
+    const users = await User.findById(req.params.id);
+    res.status(200).json({
+      status: 'success',
+      data: {
+        users,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'fail',
+      message: error.message,
+    });
+  }
 };
 
 exports.createUser = (req, res) => {
@@ -17,21 +39,41 @@ exports.createUser = (req, res) => {
     message: 'This route is not yet defined',
   });
 };
-exports.updateUser = (req, res) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'This route is not yet defined',
-  });
+exports.updateUser = async (req, res, next) => {
+  try {
+    const users = await User.findByIdAndUpdate(req.params.id);
+    res.status(200).json({
+      status: 'success',
+      data: {
+        users,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'fail',
+      message: error.message,
+    });
+  }
 };
-exports.deleteUser = (req, res) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'This route is not yet defined',
-  });
+exports.deleteUser = async (req, res, next) => {
+  try {
+    const users = await User.findByIdAndDelete(req.params.id);
+    res.status(200).json({
+      status: 'success',
+      data: {
+        users,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'fail',
+      message: error.message,
+    });
+  }
 };
 
 exports.checkbody = (req, res, next) => {
-  if (!req.body.name || req.body.price) {
+  if (!req.body.name || !req.body.price) {
     res.status(400).json({
       status: 'fail',
       message: 'missing name or price',

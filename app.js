@@ -175,7 +175,7 @@ const getAllTours = async (req, res) => {
     });
   } catch (err) {
     res.status(400).json({
-      status: 'Failed',
+      status: 'Fail',
       message: err,
     });
   }
@@ -189,6 +189,9 @@ app.get('/api/v1/tours/top-5-tours', AliasTopTour, getAllTours);
 app.get('/api/v1/tours/:id', async (req, res) => {
   try {
     const tour = await Tour.findById(req.params.id);
+    if (!tour) {
+      throw 'Id could not not found hence the tour!';
+    }
     res.status(200).json({
       status: 'success',
       data: {
@@ -197,7 +200,7 @@ app.get('/api/v1/tours/:id', async (req, res) => {
     });
   } catch (err) {
     res.status(400).json({
-      status: 'Failed',
+      status: 'Fail',
       message: err,
     });
   }
@@ -264,5 +267,14 @@ app.route('/api/v1/tours/:id').patch(updateTour).delete(deleteTour);
 //for Users
 //middleware for this route
 app.use('/api/v1/users', userRoute);
+
+// ERROR hamdling for route that is not defined.this middleware will exute gradually after all this middleware fails before it . that is why it is in the last position.
+app.all('*', (req, res, next) => {
+  res.status(404).json({
+    status: 'fail',
+    message: `Can not find this route : ${req.originalUrl} `,
+  });
+  next();
+});
 
 module.exports = app;

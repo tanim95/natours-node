@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
-const validator = require('validator');
+// const validator = require('validator');
+
 //Creating Schema
 const tourSchema = new mongoose.Schema(
   {
@@ -57,14 +58,14 @@ const tourSchema = new mongoose.Schema(
     slug: String,
   },
   {
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
-  },
-  {
     secretTour: {
       type: Boolean,
       default: false,
     },
+  },
+  {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 /// Virtual database
@@ -90,7 +91,7 @@ tourSchema.pre('find', function (next) {
   next();
 });
 tourSchema.post(/^find/, function (doc, next) {
-  console.log(`Query took ${Date.now() - this.start} millisec`);
+  // console.log(`Query took ${Date.now() - this.start} millisec`);
   next();
 });
 //aggregation middleware

@@ -6,10 +6,10 @@ const app = require('./app');
 //Connecting MongoDB using Mongoose
 mongoose
   .connect(process.env.DATABASE, {
-    useUnifiedTopology: true,
     useNewUrlParser: true,
     useCreateIndex: true,
     useFindAndModify: false,
+    useUnifiedTopology: true,
   })
   .then((con) => console.log(''))
   .catch((err) => console.log(err));

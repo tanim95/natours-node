@@ -1,3 +1,4 @@
+const util = require('util');
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 
@@ -8,6 +9,7 @@ exports.signup = async (req, res, next) => {
       email: req.body.email,
       password: req.body.password,
       passwordconfirm: req.body.passwordconfirm,
+      passwordChangedAt: req.body.passwordChangedAt,
     });
     // Creating web token[preload,secreat,signature].
     const token = jwt.sign({ id: req.body._id }, process.env.JWT_SECRET, {
@@ -64,6 +66,48 @@ exports.signin = async (req, res, next) => {
     res.status(400).json({
       status: 'fail',
       message: error.message,
+    });
+  }
+};
+
+exports.protect = async (req, res, next) => {
+  try {
+    //getting token and checking if its there
+    let token;
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith('Bearer')
+    ) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+    if (!token) {
+      throw 'Crediential is not enough to get the route';
+    }
+
+    // Token varification
+    const decodedPayload = await util.promisify(jwt.verify)(
+      token,
+      process.env.JWT_SECRET
+    );
+    // Check if user still exist
+    const freshUser = await User.findById(decodedPayload.id);
+    if (!freshUser) {
+      return res.status(401).json({
+        message: 'User do not exist',
+      });
+    }
+    //Check if user changed password after token issued.
+    if (freshUser.checkPassAfter(decodedPayload.iat)) {
+      return res.status(401).json({
+        message: 'password is changed after the token is issued',
+      });
+    }
+
+    next();
+  } catch (err) {
+    res.status(401).json({
+      status: 'fail',
+      message: err,
     });
   }
 };

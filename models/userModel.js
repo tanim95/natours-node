@@ -31,13 +31,14 @@ const userSchema = new mongoose.Schema({
       message: 'Password did not matched!',
     },
   },
+  passwordChangedAt: Date,
   photo: String,
 });
 
 userSchema.pre('save', async function (next) {
   //this line below only runs if the password is modified.
   if (!this.isModified('password')) return next();
-  // hashing the pass with cost of 12
+  // hashing the pass with cost  of 12
   this.password = await bcrypt.hash(this.password, 12);
   // deleting passwordconfirm field
   this.passwordconfirm = undefined;
@@ -48,5 +49,16 @@ userSchema.methods.comparePass = async function (candidatePass, userPass) {
   return await bcrypt.compare(candidatePass, userPass);
 };
 
+userSchema.methods.checkPassAfter = function (JWTtimrestamp) {
+  if (this.passwordChangedAt) {
+    const changedTimeStamps = parseInt(
+      this.passwordChangedAt.getTime() / 1000,
+      10
+    );
+    return JWTtimrestamp < changedTimeStamps;
+  }
+
+  return false;
+};
 const User = mongoose.model('user', userSchema);
 module.exports = User;

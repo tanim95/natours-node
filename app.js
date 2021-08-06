@@ -3,6 +3,7 @@ const fs = require('fs');
 const userRoute = require('./userRoute');
 const Tour = require('./models/tourModel');
 const APIfeature = require('./controller/tourController');
+const { protect } = require('./controller/authController');
 // const Run = require('./MongodbDriver');
 
 const app = express();
@@ -158,7 +159,7 @@ const getAllTours = async (req, res) => {
     // }
 
     // execute the query,await will immidiatly execute Query object that comes with a result in that case we cant preform any sorting or other oparation thats why we saved it in a variable for some processing the 'await' it.
-    const feature = new APIfeature(Tour.find(), req.query)
+    const feature = new APIfeature(Tour.find({}), req.query)
       .filter()
       .sort()
       .limitFields()
@@ -181,7 +182,7 @@ const getAllTours = async (req, res) => {
   }
 };
 
-app.get('/api/v1/tours/', getAllTours);
+app.get('/api/v1/tours/', protect, getAllTours);
 
 // Alias Route(FOR SPECIFIC ROUTE THAT USER USES MOST SO WE PREFIX SOME QURIES ALREADY)
 app.get('/api/v1/tours/top-5-tours', AliasTopTour, getAllTours);

@@ -116,6 +116,7 @@ exports.protect = async (req, res, next) => {
 
 exports.restrict = (...roles) => {
   return (req, res, next) => {
+    // if 'roles' array doesnt include the role that coming from 'req.user.role' then do this.
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({
         message: 'You do not have permission to do this',
@@ -124,3 +125,26 @@ exports.restrict = (...roles) => {
     next();
   };
 };
+
+exports.forgotPass = async (req, res, next) => {
+  try {
+    //get user based on posted email
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      res.status(400).json({
+        message: 'There is no user with this email address',
+      });
+    }
+
+    // Generate random token
+    const resetToken = user.passResetToken();
+    await user.save({ validateBeforeSave: false });
+
+    next();
+  } catch (err) {
+    res.status(404).json({
+      message: err.message,
+    });
+  }
+};
+exports.resetPass = async (req, res, next) => {};

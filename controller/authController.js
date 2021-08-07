@@ -90,18 +90,20 @@ exports.protect = async (req, res, next) => {
       process.env.JWT_SECRET
     );
     // Check if user still exist
-    const freshUser = await User.findById(decodedPayload.id);
-    if (!freshUser) {
+    const currentUser = await User.findById(decodedPayload.id);
+
+    if (!currentUser) {
       return res.status(401).json({
         message: 'User do not exist',
       });
     }
     //Check if user changed password after token issued.
-    if (freshUser.checkPassAfter(decodedPayload.iat)) {
+    if (currentUser.checkPassAfter(decodedPayload.iat)) {
       return res.status(401).json({
         message: 'password is changed after the token is issued',
       });
     }
+    req.user = currentUser;
 
     next();
   } catch (err) {
@@ -110,4 +112,15 @@ exports.protect = async (req, res, next) => {
       message: err,
     });
   }
+};
+
+exports.restrict = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        message: 'You do not have permission to do this',
+      });
+    }
+    next();
+  };
 };

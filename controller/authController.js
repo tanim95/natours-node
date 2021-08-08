@@ -1,6 +1,8 @@
 const util = require('util');
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
+const sendEmail = require('../email');
+const crypto = require('crypto');
 
 exports.signup = async (req, res, next) => {
   try {
@@ -140,6 +142,19 @@ exports.forgotPass = async (req, res, next) => {
     const resetToken = user.passResetToken();
     await user.save({ validateBeforeSave: false });
 
+    //send it to user email
+    const resetUrl = `127.0.0.1:3000/api/v1/users/resetPassword/${resetToken}`;
+    const message = `Forgot your password? go to this link(${resetUrl}) and reset your password.`;
+    await sendEmail({
+      email: req.body.email,
+      subject: 'Your password reset token is valid for 10 minutes',
+      message: message,
+    });
+    res.status(200).json({
+      status: 'success',
+      message: 'Password reset token has been sent to the email',
+    });
+
     next();
   } catch (err) {
     res.status(404).json({
@@ -147,4 +162,42 @@ exports.forgotPass = async (req, res, next) => {
     });
   }
 };
-exports.resetPass = async (req, res, next) => {};
+exports.resetPass = async (req, res, next) => {
+  try {
+    // get user based on token
+    const token = crypto
+      .createHash('sha256')
+      .update(req.params.token)
+      .digest('hex');
+    const user = await User.findOne({
+      passwordResetToken: token,
+      passwordResetExpires: { $gt: Date.now() },
+    });
+    // if there is no user
+    if (!user) {
+      return res.status(400).json({
+        message: 'No user found',
+      });
+    }
+    // Reseting password
+    user.password = req.body.password;
+    user.passwordconfirm = req.body.passwordconfirm;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
+    // Sending JWT
+    const JsonToken = jwt.sign({ id: req.body._id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN,
+    });
+    res.status(200).json({
+      status: 'Success',
+      token: JsonToken,
+    });
+
+    next();
+  } catch (err) {
+    res.status(500).json({
+      message: 'Somthing went wrong!',
+    });
+  }
+};

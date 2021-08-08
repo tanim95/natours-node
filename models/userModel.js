@@ -52,6 +52,13 @@ userSchema.pre('save', async function (next) {
   this.passwordconfirm = undefined;
   next();
 });
+
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password') || this.isNew) return next();
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
+
 // IT IS AN 'INSTANCE' WHICH IS AVAILABLE FOR ALL THE DOCUMNET IN A CERTAIN COLLECTION.
 userSchema.methods.comparePass = async function (candidatePass, userPass) {
   return await bcrypt.compare(candidatePass, userPass);
@@ -76,7 +83,7 @@ userSchema.methods.passResetToken = function () {
     .update(resetToken)
     .digest('hex');
   this.passwordResetExpires = Date.now() + 5 * 60 * 1000;
-  console.log({ resetToken }, this.passwordResetToken);
+  // console.log({ resetToken }, this.passwordResetToken);
   return resetToken;
 };
 

@@ -7,11 +7,8 @@ const userRoute = express.Router();
 userRoute.post('/signup', authController.signup);
 userRoute.post('/signin', authController.signin);
 userRoute.post('/forgotPassword', authController.forgotPass);
-userRoute.patch(
-  '/updatePassword',
-  authController.protect,
-  authController.updatePassword
-);
+userRoute.patch('/updateMe', authController.protect, userController.updateMe);
+userRoute.patch('/updatePassword', authController.updatePassword);
 userRoute.patch('/resetPassword/:token', authController.resetPass);
 userRoute
   .route('/')

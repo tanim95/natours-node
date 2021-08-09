@@ -1,5 +1,13 @@
 const User = require('../models/userModel');
 
+const filterObj = (obj, ...allowedFields) => {
+  const newObj = {};
+  Object.keys(obj).forEach((el) => {
+    if (allowedFields.includes(el)) newObj[el] = obj[el];
+  });
+  return newObj;
+};
+
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find();
@@ -38,6 +46,26 @@ exports.createUser = (req, res) => {
     status: 'error',
     message: 'This route is not yet defined',
   });
+};
+exports.updateMe = async (req, res, next) => {
+  try {
+    //filtered out unwanted field name that are not allowed to update like 'role'.if "role" chnages to "admin" then user will have authority.
+    const filterDoc = filterObj(req.body, 'name', 'email');
+    //updating user data
+    const updatedUser = await User.findByIdAndUpdate(req.body.id, filterDoc, {
+      new: true,
+      runValidators: true,
+    });
+    res.status(200).json({
+      status: 'Success',
+      data: updatedUser,
+    });
+    next();
+  } catch (err) {
+    res.status(400).json({
+      message: err,
+    });
+  }
 };
 exports.updateUser = async (req, res, next) => {
   try {

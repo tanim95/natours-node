@@ -205,7 +205,7 @@ exports.resetPass = async (req, res, next) => {
 exports.updatePassword = async (req, res, next) => {
   try {
     //Get user form collection
-    const user = await User.findById(req.body.id).select('+password');
+    const user = await User.findById(req.body._id).select('+password');
 
     // checking if password is correct
     if (

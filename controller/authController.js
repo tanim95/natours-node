@@ -115,7 +115,7 @@ exports.protect = async (req, res, next) => {
     });
   }
 };
-
+// Authorization
 exports.restrict = (...roles) => {
   return (req, res, next) => {
     // if 'roles' array doesnt include the role that coming from 'req.user.role' then do this.
@@ -198,6 +198,42 @@ exports.resetPass = async (req, res, next) => {
   } catch (err) {
     res.status(500).json({
       message: 'Somthing went wrong!',
+    });
+  }
+};
+
+exports.updatePassword = async (req, res, next) => {
+  try {
+    //Get user form collection
+    const user = await User.findById(req.body.id).select('+password');
+
+    // checking if password is correct
+    if (
+      !user ||
+      !(await user.comparePass(req.body.passwordCurrent, user.password))
+    ) {
+      return res.status(401).json({
+        message: 'We could not find the user',
+      });
+    }
+    // if so then update the password
+    user.password = req.body.password;
+    user.passwordconfirm = req.body.passwordconfirm;
+    await user.save(); //User.findById wont work .
+
+    const JsonToken = jwt.sign({ id: req.body._id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN,
+    });
+
+    res.status(201).json({
+      status: 'Success',
+      token: JsonToken,
+    });
+    next();
+  } catch (err) {
+    res.status(400).json({
+      status: 'Fail',
+      message: err.message,
     });
   }
 };

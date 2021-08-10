@@ -1,12 +1,21 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const helmet = require('helmet');
 const fs = require('fs');
 const userRoute = require('./userRoute');
 const Tour = require('./models/tourModel');
 const APIfeature = require('./controller/tourController');
 const { protect } = require('./controller/authController');
+const hpp = require('hpp');
 // const Run = require('./MongodbDriver');
 
+// middleware
 const app = express();
+// middleware for setting HTTP headers
+app.use(helmet());
+
 if (process.env.NODE_ENV === 'development') {
   console.log('You are currently in development mode');
 }
@@ -14,8 +23,28 @@ if (process.env.NODE_ENV === 'development') {
 // Middleware for sending any file from ceritain folder direct to the browser
 app.use(express.static(`${__dirname}/public`));
 
+// Global middleware/rate limiter which makes sure request from a certaim IP in a certain ammount of time is in a given limit.
+const limit = rateLimit({
+  // 100 req form an IP in one hour
+  max: 100,
+  windowMs: 60 * 60 * 1000,
+  message: 'Too many request,please try again in an hour.',
+});
+app.use('/api', limit);
+
 //// Middle ware,without it we cant use 'post' request body data i.e 'req.body'.
-app.use(express.json());
+app.use(express.json({ limit: '10kb' }));
+
+// Data sanitaization against NoSQL injection
+app.use(mongoSanitize());
+// Data samitization against XSS attack
+app.use(xss());
+//prevent parameter pollution
+app.use(
+  hpp({
+    whitelist: ['duration', 'difficulty', 'price'],
+  })
+);
 
 // Our own middleware function,this is also a global middleware as its declared before all the middleware like GET,POST etc.We can use this middleware function in any get request below
 app.use((req, res, next) => {
@@ -182,7 +211,7 @@ const getAllTours = async (req, res) => {
   }
 };
 
-app.get('/api/v1/tours/', protect, getAllTours);
+app.get('/api/v1/tours/', getAllTours);
 
 // Alias Route(FOR SPECIFIC ROUTE THAT USER USES MOST SO WE PREFIX SOME QURIES ALREADY)
 app.get('/api/v1/tours/top-5-tours', AliasTopTour, getAllTours);

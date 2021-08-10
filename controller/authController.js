@@ -13,6 +13,10 @@ exports.signup = async (req, res, next) => {
       passwordconfirm: req.body.passwordconfirm,
       passwordChangedAt: req.body.passwordChangedAt,
     });
+
+    // to hide password form output result
+    newUser.password = undefined;
+
     // Creating web token[preload,secreat,signature].
     const token = jwt.sign({ id: req.body._id }, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRES_IN,

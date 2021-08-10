@@ -229,6 +229,14 @@ exports.updatePassword = async (req, res, next) => {
       status: 'Success',
       token: JsonToken,
     });
+
+    // Or we can send jeson web token as a cookie which is more secure.we will do this when we are in production
+    // res.cookie('jwt', JsonToken, {
+    //   expires: new Date(Date.now() + 48 * 60 * 60 * 1000),
+    //   secure: true,
+    //   httpOnly: true,
+    // });
+
     next();
   } catch (err) {
     res.status(400).json({

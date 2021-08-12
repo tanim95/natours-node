@@ -4,7 +4,8 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const helmet = require('helmet');
 const fs = require('fs');
-const userRoute = require('./userRoute');
+const userRoute = require('./routes/userRoute');
+const reviewRoute = require('./routes/reviewRoute');
 const Tour = require('./models/tourModel');
 const APIfeature = require('./controller/tourController');
 const { protect } = require('./controller/authController');
@@ -218,7 +219,7 @@ app.get('/api/v1/tours/top-5-tours', AliasTopTour, getAllTours);
 
 app.get('/api/v1/tours/:id', async (req, res) => {
   try {
-    const tour = await Tour.findById(req.params.id);
+    const tour = await Tour.findById(req.params.id).populate('guides'); // used in query pre middleware
     if (!tour) {
       throw 'Id could not not found hence the tour!';
     }
@@ -231,7 +232,7 @@ app.get('/api/v1/tours/:id', async (req, res) => {
   } catch (err) {
     res.status(400).json({
       status: 'Fail',
-      message: err,
+      message: err.message,
     });
   }
 });
@@ -297,6 +298,7 @@ app.route('/api/v1/tours/:id').patch(updateTour).delete(deleteTour);
 //for Users
 //middleware for this route
 app.use('/api/v1/users', userRoute);
+app.use('/api/v1/reviews', reviewRoute);
 
 // ERROR hamdling for route that is not defined.this middleware will exute gradually after all this middleware fails before it . that is why it is in the last position.
 app.all('*', (req, res, next) => {

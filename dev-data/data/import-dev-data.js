@@ -11,14 +11,13 @@ mongoose
     useUnifiedTopology: true,
     useCreateIndex: true,
     useFindAndModify: false,
+    useNewUrlParser: true,
   })
   .then((con) => console.log(''))
   .catch((err) => console.log(err));
 
 // Reading the file
-const tours = JSON.parse(
-  fs.readFileSync(`${__dirname}/tours-sample.json`, 'utf-8')
-);
+const tours = JSON.parse(fs.readFileSync(`${__dirname}/tours.json`, 'utf-8'));
 
 const importData = async () => {
   try {

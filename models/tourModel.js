@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+// const User = require('./userModel');
 // const validator = require('validator');
 
 //Creating Schema
@@ -56,12 +57,42 @@ const tourSchema = new mongoose.Schema(
     },
     startDates: [Date],
     slug: String,
-  },
-  {
     secretTour: {
       type: Boolean,
       default: false,
     },
+    // GeoSptital Location in MongoDB
+    startLocation: {
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number],
+      address: String,
+      discription: String,
+    },
+    // NOW WE ARE 'EMBEDDING' A DOCUMNET SO IT HAS TO BE AN ARRAY NOT OBJECT.
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        discription: String,
+        day: Number,
+      },
+    ],
+    // guides: Array,
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
   {
     toJSON: { virtuals: true },
@@ -78,6 +109,12 @@ tourSchema.pre('save', function (next) {
   this.slug = slugify(this.name, { lower: true });
   next();
 });
+// embedding document from User model by middleware before save.
+// tourSchema.pre('save', async function (next) {
+//   const guidesPromise = this.guides.map(async (id) => await User.findById(id));
+//   this.guides = await Promise.all(guidesPromise);
+//   next();
+// });
 // document post middleware.that works after 'save' or 'create' event.
 tourSchema.post('save', function (doc, next) {
   // console.log(doc);
@@ -90,10 +127,15 @@ tourSchema.pre('find', function (next) {
   this.start = Date.now();
   next();
 });
-tourSchema.post(/^find/, function (doc, next) {
-  // console.log(`Query took ${Date.now() - this.start} millisec`);
-  next();
-});
+// tourSchema.post(/^find/, function (doc, next) {
+//   // console.log(`Query took ${Date.now() - this.start} millisec`);
+//   next();
+// });
+// populating as a reference
+// tourSchema.post(/^find/, function (next) {
+//   this.populate('guides');
+//   next();
+// });
 //aggregation middleware
 tourSchema.pre('aggregate', function (next) {
   console.log(this.pipeline);

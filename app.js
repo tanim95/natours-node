@@ -219,7 +219,9 @@ app.get('/api/v1/tours/top-5-tours', AliasTopTour, getAllTours);
 
 app.get('/api/v1/tours/:id', async (req, res) => {
   try {
-    const tour = await Tour.findById(req.params.id).populate('guides'); // used in query pre middleware
+    const tour = await Tour.findById(req.params.id)
+      .populate('guides')
+      .populate('reviews'); // used in query pre middleware
     if (!tour) {
       throw 'Id could not not found hence the tour!';
     }

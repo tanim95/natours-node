@@ -87,6 +87,7 @@ const tourSchema = new mongoose.Schema(
       },
     ],
     // guides: Array,
+    // Child referencing ,'tour' referencing 'user'
     guides: [
       {
         type: mongoose.Schema.ObjectId,
@@ -103,7 +104,13 @@ const tourSchema = new mongoose.Schema(
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
-// mongoose middleware,doc middleware
+// Populating virtually new field 'reviews' which actully do not exist in database.
+tourSchema.virtual('reviews', {
+  ref: 'review',
+  foreignField: 'tour',
+  localField: '_id',
+});
+// mongoose middleware,doc middleware.
 // document pre middleware.that works before 'save' or 'create' event.we can use multiple pre middleware
 tourSchema.pre('save', function (next) {
   this.slug = slugify(this.name, { lower: true });

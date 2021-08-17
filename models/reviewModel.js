@@ -69,11 +69,12 @@ reviewSchema.post('save', function () {
 
 // using this calculateAvgRating function for update and delete event but prblm is this method returns 'query middleware' not 'doc middleware'
 reviewSchema.pre(/^findOneAnd/, async function (next) {
-  this.r = await this.findOne(); // we stored the executed value of 'findOne' in 'this' as a property, so we can ues it in 'post middleware'. This is bcz we cant use doc middleware so we are usin pre and post middleware as a solution! this is only way
+  this.r = await this.findOne(); // we stored the executed value of 'findOne' in 'this' as a property, so we can pass it in 'post middleware'. This is bcz we cant use doc middleware so we are usin pre and post middleware as a solution! this is only way
   next();
 });
 reviewSchema.post(/^findOneAnd/, async function () {
-  calculateAvgRating(this.r.tour);
+  // here 'this.r.constructor = model(i.g 'Tour')'
+  await this.r.constructor.calculateAvgRating(this.r.tour);
 });
 const Review = mongoose.model('review', reviewSchema);
 module.exports = Review;

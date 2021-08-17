@@ -8,6 +8,11 @@ const filterObj = (obj, ...allowedFields) => {
   return newObj;
 };
 
+// exports.getMe = (req, res, next) => {
+//   req.params.id = req.user.id;
+//   next();
+// };
+
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find();

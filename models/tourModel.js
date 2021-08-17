@@ -100,6 +100,11 @@ const tourSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   }
 );
+// 'single field index' to find data from database more fast.
+tourSchema.index({ price: 1 });
+// compound field index.
+tourSchema.index({ price: 1, ratingsAvarage: -1 });
+
 /// Virtual database
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;

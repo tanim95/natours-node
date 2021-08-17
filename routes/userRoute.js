@@ -5,12 +5,16 @@ const authController = require('../controller/authController');
 
 const userRoute = express.Router();
 userRoute.post('/signup', authController.signup);
+// userRoute.get('/me', userController.getMe, userController.getUser);
 userRoute.post('/signin', authController.signin);
 userRoute.post('/forgotPassword', authController.forgotPass);
 userRoute.patch('/updateMe', authController.protect, userController.updateMe);
 userRoute.patch('/updatePassword', authController.updatePassword);
 userRoute.patch('/resetPassword/:token', authController.resetPass);
 userRoute.delete('/deleteuser', userController.deleteMe);
+
+// userRoute.use(authController.protect); //after this middleware every route below this line will autometically embed protect function.
+
 userRoute
   .route('/')
   .get(userController.getAllUsers)
@@ -20,7 +24,7 @@ userRoute
   .get(userController.getUser)
   .patch(userController.updateUser)
   .delete(
-    authController.protect,
+    // authController.protect,
     authController.restrict('admin', 'lead-guide'),
     userController.deleteUser
   );

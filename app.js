@@ -10,6 +10,7 @@ const Tour = require('./models/tourModel');
 const APIfeature = require('./controller/tourController');
 const { protect } = require('./controller/authController');
 const hpp = require('hpp');
+// const delteHandler = require('./controller//handlerFactory');
 // const Run = require('./MongodbDriver');
 
 // middleware
@@ -191,10 +192,10 @@ const getAllTours = async (req, res) => {
     // execute the query,await will immidiatly execute Query object that comes with a result in that case we cant preform any sorting or other oparation thats why we saved it in a variable for some processing the 'await' it.
     const feature = new APIfeature(Tour.find({}), req.query)
       .filter()
-      .sort()
+      .sort(req.params.query)
       .limitFields()
       .paginate();
-    const tours = await feature.query;
+    const tours = await feature.query.explain();
 
     res.status(200).json({
       status: 'success',
@@ -301,6 +302,8 @@ app.route('/api/v1/tours/:id').patch(updateTour).delete(deleteTour);
 //middleware for this route
 app.use('/api/v1/users', userRoute);
 app.use('/api/v1/reviews', reviewRoute);
+//nested route
+app.use('./api/v1/tours/tourId/reviews', reviewRoute);
 
 // ERROR hamdling for route that is not defined.this middleware will exute gradually after all this middleware fails before it . that is why it is in the last position.
 app.all('*', (req, res, next) => {

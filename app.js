@@ -223,10 +223,11 @@ const getToursWithin = async (req, res, next) => {
       throw 'We could not find the location';
     }
     const tours = await Tour.find({
-      startLocation: { $geoWithin: { $centerSphere: [[lat, lng], radius] } },
+      startLocation: { $geoWithin: { $centerSphere: [[lng, lat], radius] } },
     });
     res.status(200).json({
       status: 'Success',
+      results: tours.length,
       data: {
         tours,
       },

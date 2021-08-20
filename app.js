@@ -239,13 +239,49 @@ const getToursWithin = async (req, res, next) => {
   }
 };
 
-app.get('/api/v1/tours/', getAllTours);
+const getDistance = async (req, res, next) => {
+  try {
+    const { latlng, unit } = req.params;
+    const [lat, lng] = latlng.split(',');
+    const multiplier = unit === 'km' ? 0.001 : 0.000621371;
+    if (!lat || !lng) {
+      throw 'We could not find the distance of your location';
+    }
+    const distance = await Tour.aggregate([
+      {
+        $geoNear: {
+          near: {
+            type: 'Point',
+            coordinates: [+lng, +lat],
+          },
+        },
+        distanceField: 'distance',
+        distanceMultiplier: multiplier,
+      },
+      {
+        distance: 1,
+        name: 1,
+      },
+    ]);
 
+    res.status(200).json({
+      status: 'Success',
+      distance,
+    });
+  } catch (err) {
+    res.status(400).json({
+      message: err.message,
+    });
+  }
+};
+
+app.get('/api/v1/tours/', getAllTours);
 // Finding tours in a certain distance.
 app.get(
   '/api/v1/tours/tours-within/:distance/center/:latlng/unit/:unit',
   getToursWithin
 );
+app.get('/api/v1/tours/distances/:latlng/unit/:unit', getDistance);
 
 // Alias Route(FOR SPECIFIC ROUTE THAT USER USES MOST SO WE PREFIX SOME QURIES ALREADY)
 app.get('/api/v1/tours/top-5-tours', AliasTopTour, getAllTours);

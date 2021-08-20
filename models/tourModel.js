@@ -152,10 +152,11 @@ tourSchema.pre('find', function (next) {
 //   next();
 // });
 //aggregation middleware
-tourSchema.pre('aggregate', function (next) {
-  console.log(this.pipeline);
-  next();
-});
+
+// tourSchema.pre('aggregate', function (next) {
+//   console.log(this.pipeline);
+//   next();
+// });
 
 //Creating Model out of Schema
 const Tour = mongoose.model('tours', tourSchema);

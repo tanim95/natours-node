@@ -31,6 +31,7 @@ const tourSchema = new mongoose.Schema(
       default: 4.5,
       min: 1,
       max: 5,
+      set: (val) => Math.round(val * 10) / 10,
     },
     ratingsQunatity: {
       type: Number,
@@ -104,6 +105,8 @@ const tourSchema = new mongoose.Schema(
 tourSchema.index({ price: 1 });
 // compound field index.
 tourSchema.index({ price: 1, ratingsAvarage: -1 });
+// Index for Geospitial quries.
+tourSchema.index({ startLocation: '2dsphere' });
 
 /// Virtual database
 tourSchema.virtual('durationWeeks').get(function () {

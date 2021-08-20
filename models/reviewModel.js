@@ -56,12 +56,19 @@ reviewSchema.static.calculateAvgRating = async function (tourId) {
     },
   ]);
   // console.log(stats);
-  await Tour.findById(tourId, {
-    ratingsQunatity: stats[0].nRating,
-    ratingsAvarage: stats[0].avgRating,
-  });
+  if (stats.length > 0) {
+    await Tour.findById(tourId, {
+      ratingsQunatity: stats[0].nRating,
+      ratingsAvarage: stats[0].avgRating,
+    });
+  } else {
+    await Tour.findById(tourId, {
+      ratingsQunatity: 0,
+      ratingsAvarage: 0,
+    });
+  }
 };
-
+reviewSchema.index({ tour: 1, user: 1 }, { unique: true }); // so each combination of tour and user will be unique not any of them individually.
 reviewSchema.post('save', function () {
   // this.constructor points 'Review' model which is decalared after this function!
   this.constructor.calculateAvgRating(this.tour);
@@ -69,7 +76,7 @@ reviewSchema.post('save', function () {
 
 // using this calculateAvgRating function for update and delete event but prblm is this method returns 'query middleware' not 'doc middleware'
 reviewSchema.pre(/^findOneAnd/, async function (next) {
-  this.r = await this.findOne(); // we stored the executed value of 'findOne' in 'this' as a property, so we can pass it in 'post middleware'. This is bcz we cant use doc middleware so we are usin pre and post middleware as a solution! this is only way
+  this.r = await this.findOne(); // 'this.findOne' returns a 'query' but awaiting(executing) it we get the document which we need. we stored the executed value of 'findOne' in 'this' as a property, so we can pass it in 'post middleware'. This is bcz we cant use doc middleware so we are usin pre and post middleware as a solution! this is only way
   next();
 });
 reviewSchema.post(/^findOneAnd/, async function () {

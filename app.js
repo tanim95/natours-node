@@ -192,10 +192,11 @@ const getAllTours = async (req, res) => {
     // execute the query,await will immidiatly execute Query object that comes with a result in that case we cant preform any sorting or other oparation thats why we saved it in a variable for some processing the 'await' it.
     const feature = new APIfeature(Tour.find({}), req.query)
       .filter()
-      .sort(req.params.query)
+      .sort()
       .limitFields()
       .paginate();
-    const tours = await feature.query.explain();
+    const tours = await feature.query;
+    // const tours = await feature.query.explain();
 
     res.status(200).json({
       status: 'success',
@@ -208,12 +209,42 @@ const getAllTours = async (req, res) => {
   } catch (err) {
     res.status(400).json({
       status: 'Fail',
+      message: err.message,
+    });
+  }
+};
+//Geospitial queries for finding tours in certian distance from a certain location.
+const getToursWithin = async (req, res, next) => {
+  try {
+    const { distance, latlng, unit } = req.params;
+    const [lat, lng] = latlng.split(',');
+    const radius = unit === 'km' ? distance / 6378.1 : distance / 3963.2;
+    if (!lat || !lng) {
+      throw 'We could not find the location';
+    }
+    const tours = await Tour.find({
+      startLocation: { $geoWithin: { $centerSphere: [[lat, lng], radius] } },
+    });
+    res.status(200).json({
+      status: 'Success',
+      data: {
+        tours,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
       message: err,
     });
   }
 };
 
 app.get('/api/v1/tours/', getAllTours);
+
+// Finding tours in a certain distance.
+app.get(
+  '/api/v1/tours/tours-within/:distance/center/:latlng/unit/:unit',
+  getToursWithin
+);
 
 // Alias Route(FOR SPECIFIC ROUTE THAT USER USES MOST SO WE PREFIX SOME QURIES ALREADY)
 app.get('/api/v1/tours/top-5-tours', AliasTopTour, getAllTours);

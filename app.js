@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
@@ -10,11 +11,15 @@ const Tour = require('./models/tourModel');
 const APIfeature = require('./controller/tourController');
 const { protect } = require('./controller/authController');
 const hpp = require('hpp');
+const { patch } = require('./routes/userRoute');
 // const delteHandler = require('./controller//handlerFactory');
 // const Run = require('./MongodbDriver');
 
 // middleware
 const app = express();
+
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
 // middleware for setting HTTP headers
 app.use(helmet());
 
@@ -22,8 +27,9 @@ if (process.env.NODE_ENV === 'development') {
   console.log('You are currently in development mode');
 }
 
-// Middleware for sending any file from ceritain folder direct to the browser
-app.use(express.static(`${__dirname}/public`));
+// Middleware for sending any static file from ceritain folder direct to the browser
+// app.use(express.static(`${__dirname}/public`));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Global middleware/rate limiter which makes sure request from a certaim IP in a certain ammount of time is in a given limit.
 const limit = rateLimit({
@@ -60,6 +66,13 @@ app.use((req, res, next) => {
 // fs.readFileSync(`${__dirname}/dev-data/data/tours-sample.json`,'utf-8)
 // );
 
+// for rendering pug template
+app.get('/', (req, res) => {
+  res.status(200).render('base', {
+    tour: 'Forest Hiker',
+    user: 'Tanim',
+  });
+});
 const AliasTopTour = (req, res, next) => {
   req.query.limit = '5';
   req.query.sort = 'price';

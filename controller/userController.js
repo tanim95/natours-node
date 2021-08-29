@@ -1,4 +1,26 @@
 const User = require('../models/userModel');
+const multer = require('multer');
+
+const multerStorage = multer.diskStorage({
+  destination: (req, res, callback) => {
+    callback(null, 'public/img/users');
+  },
+  filename: (req, file, callback) => {
+    const ext = file.mimetype.split('/')[1];
+    callback(null, `user-${req.users.id}-${Date.now()}-${ext}`);
+  },
+});
+// Cheacking if the uploaded file is really image or somthing malicious.
+const multerFilter = (req, file, callback) => {
+  if (file.mimetype.startsWith('image')) {
+    callback(null, true);
+  } else [callback('Not an Image', false)];
+};
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter,
+});
+exports.uploadPhoto = upload.single('photo');
 
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
@@ -54,6 +76,7 @@ exports.createUser = (req, res) => {
 };
 exports.updateMe = async (req, res, next) => {
   try {
+    console.log(req.file);
     //filtered out unwanted field name that are user not allowed to update like 'role'.if "role" chnages to "admin" then user will have authority.
     const filterDoc = filterObj(req.body, 'name', 'email');
     //updating user data

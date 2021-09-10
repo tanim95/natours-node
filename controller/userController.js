@@ -1,15 +1,21 @@
 const User = require('../models/userModel');
 const multer = require('multer');
+const sharp = require('sharp');
 
-const multerStorage = multer.diskStorage({
-  destination: (req, res, callback) => {
-    callback(null, 'public/img/users');
-  },
-  filename: (req, file, callback) => {
-    const ext = file.mimetype.split('/')[1];
-    callback(null, `user-${req.users.id}-${Date.now()}-${ext}`);
-  },
-});
+//Multer Middleware
+// const multerStorage = multer.diskStorage({
+//   destination: (req, res, callback) => {
+//     callback(null, 'public/img/users');
+//   },
+//   filename: (req, file, callback) => {
+//     const ext = file.mimetype.split('/')[1];
+//     callback(null, `user-${req.user.id}-${Date.now()}.${ext}`);
+//   },
+// });
+
+//saving file to buffer memeory.
+const multerStorage = multer.memoryStorage();
+
 // Cheacking if the uploaded file is really image or somthing malicious.
 const multerFilter = (req, file, callback) => {
   if (file.mimetype.startsWith('image')) {
@@ -21,6 +27,17 @@ const upload = multer({
   fileFilter: multerFilter,
 });
 exports.uploadPhoto = upload.single('photo');
+
+exports.resizeImage = (req, res, next) => {
+  req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
+  if (req.file) return next();
+  sharp(req.file.buffer)
+    .resize(500, 500)
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 })
+    .toFile(`public/img/users/${req.file.filename}`);
+  next();
+};
 
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
@@ -76,7 +93,7 @@ exports.createUser = (req, res) => {
 };
 exports.updateMe = async (req, res, next) => {
   try {
-    console.log(req.file);
+    if (req.file) filterDoc.photo = req.file.filename;
     //filtered out unwanted field name that are user not allowed to update like 'role'.if "role" chnages to "admin" then user will have authority.
     const filterDoc = filterObj(req.body, 'name', 'email');
     //updating user data

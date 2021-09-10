@@ -12,6 +12,7 @@ userRoute.post('/forgotPassword', authController.forgotPass);
 userRoute.patch(
   '/updateMe',
   userController.uploadPhoto,
+  userController.resizeImage,
   userController.updateMe
 );
 userRoute.patch('/updatePassword', authController.updatePassword);

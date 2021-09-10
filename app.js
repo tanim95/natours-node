@@ -12,6 +12,7 @@ const APIfeature = require('./controller/tourController');
 const { protect } = require('./controller/authController');
 const hpp = require('hpp');
 const { patch } = require('./routes/userRoute');
+const viewRouter = require('./routes/viewRoutes');
 // const delteHandler = require('./controller//handlerFactory');
 // const Run = require('./MongodbDriver');
 
@@ -385,6 +386,8 @@ app.use('/api/v1/users', userRoute);
 app.use('/api/v1/reviews', reviewRoute);
 //nested route
 app.use('./api/v1/tours/tourId/reviews', reviewRoute);
+//view route for rendering pug
+app.use('/', viewRouter);
 
 // ERROR hamdling for route that is not defined.this middleware will exute gradually after all this middleware fails before it . that is why it is in the last position.
 app.all('*', (req, res, next) => {

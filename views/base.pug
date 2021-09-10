@@ -6,7 +6,7 @@ head
   link(href='https://fonts.googleapis.com/css?family=Lato:300,300i,700' rel='stylesheet')
   link(rel='stylesheet' href='css/style.css')
   link(rel='shortcut icon' type='image/png' href='img/favicon.png')
-  title Natours | Exciting tours for adventurous people
+  title Natours | #{title}
 body 
   header.header
     nav.nav.nav--tours
@@ -25,9 +25,13 @@ body
       //-   span Tanim
   button.nav__el Log in
   button.nav__el.nav__el--cta Sign up
-  section.overview 
-  h1= tour
 
+  //- content
+  block Content
+   h1 This is a place holder
+
+
+  //-footer
   footer.footer
   .footer__logo
     img(src='img/logo-green.png' alt='Natours logo')
@@ -43,4 +47,4 @@ body
     li
       a(href='#') Contact
   p.footer__copyright
-    | &copy; by Jonas Schmedtmann. All rights reserved.Feel free to use this as a learning purposes.
+    | &copy; by Jonas Schmedtmann. All rights reserve 
